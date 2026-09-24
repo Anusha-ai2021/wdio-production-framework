@@ -1,0 +1,30 @@
+{
+  "name": "wdio-production-framework",
+  "version": "1.0.0",
+  "description": "Production-grade WebdriverIO + Mocha automation framework with CI/CD, Allure reporting, and Jira defect logging",
+  "type": "commonjs",
+  "scripts": {
+    "test": "wdio run ./wdio.conf.js",
+    "test:staging": "cross-env TEST_ENV=staging wdio run ./wdio.conf.js",
+    "test:prod": "cross-env TEST_ENV=prod wdio run ./wdio.conf.js",
+    "test:headless": "cross-env HEADLESS=true wdio run ./wdio.conf.js",
+    "report:generate": "allure generate ./reports/allure-results --clean -o ./reports/allure-report",
+    "report:open": "allure open ./reports/allure-report",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix"
+  },
+  "devDependencies": {
+    "@wdio/cli": "^9.0.0",
+    "@wdio/local-runner": "^9.0.0",
+    "@wdio/mocha-framework": "^9.0.0",
+    "@wdio/spec-reporter": "^9.0.0",
+    "@wdio/allure-reporter": "^9.0.0",
+    "@wdio/junit-reporter": "^9.0.0",
+    "allure-commandline": "^2.30.0",
+    "eslint": "^8.57.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "axios": "^1.7.2",
+    "form-data": "^4.0.0"
+  }
+}

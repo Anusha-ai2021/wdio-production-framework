@@ -1,0 +1,13 @@
+package.json will have all the info like what libraries are used-(WebdriverIO, Mocha, etc.) plus shortcut commands like npm test.
+--package.json is the "shopping list" — it says things like "I need WebdriverIO, version 9 or newer." It's a bit loose on purpose, so you get bug fixes automatically.
+--package-lock.json is the "detailed receipt" — it records the exact version of every single library that actually got downloaded (including the smaller libraries those libraries depend on, which you never see directly). So instead of just "WebdriverIO version 9-or-newer," it pins down the precise version like 9.4.2, down to every sub-dependency.
+
+wdio.conf.js:It tells WebdriverIO which browser to use, where the test files are, which reports to generate, and what to do when a test fails. This is the file that ties everything together.
+
+🐳 Dockerfile — instructions for packaging this whole project into a "container" (a self-contained mini-computer) so it runs identically on any machine. You won't need this for now — it matters later, for the CI/CD pipeline.
+
+⚙️ .env.example — a template for secret settings (like your test username/password, or your Jira login). It's called "example" because you're meant to copy it to a real .env file and fill in real values — we haven't done that yet, that's a later step.
+
+helpers/ — contains jiraDefectLogger.js, the "auto-complaint-filer" we talked about. It only kicks in when a test fails.
+
+🟣 .eslintrc.json — rules for a tool called ESLint that checks your code style and catches typos/mistakes before you even run it. Not essential to get tests running — think of it as a spell-checker for code.

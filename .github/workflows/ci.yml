@@ -1,0 +1,96 @@
+name: WebdriverIO Automation Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * *'   # nightly regression at 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run against'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [dev, staging, prod]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Run WebdriverIO tests
+        env:
+          TEST_ENV: ${{ github.event.inputs.environment || 'staging' }}
+          HEADLESS: 'true'
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_PASSWORD: ${{ secrets.SAUCE_PASSWORD }}
+          JIRA_ENABLED: 'true'
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+          DEV_BASE_URL: https://www.saucedemo.com/
+          STAGING_BASE_URL: https://www.saucedemo.com/
+          PROD_BASE_URL: https://www.saucedemo.com/
+        run: npm test
+        continue-on-error: true
+        id: run_tests
+
+      - name: Generate Allure report
+        if: always()
+        run: |
+          npm install -g allure-commandline
+          allure generate ./reports/allure-results --clean -o ./reports/allure-report
+
+      - name: Upload Allure report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: reports/allure-report
+          retention-days: 30
+
+      - name: Upload JUnit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-results
+          path: reports/junit-results
+
+      - name: Publish JUnit test summary
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: WDIO Test Results
+          path: 'reports/junit-results/*.xml'
+          reporter: java-junit
+
+      - name: Deploy Allure report to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: reports/allure-report
+
+      - name: Fail pipeline if tests failed
+        if: steps.run_tests.outcome == 'failure'
+        run: exit 1
